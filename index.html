@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LIFF Data Grab</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+<h2>LIFF Data</h2>
+<pre id="output">Loading...</pre>
+
+<script>
+async function main() {
+  try {
+    await liff.init({ liffId: "YOUR_LIFF_ID" }); // replace with your LIFF ID
+
+    let output = {};
+
+    // 1. Profile (no pic)
+    const profile = await liff.getProfile();
+    output.displayName = profile.displayName;
+    output.userId = profile.userId;
+    output.statusMessage = profile.statusMessage;
+
+    // 2. Context
+    const context = liff.getContext();
+    output.context = context;
+
+    // 3. Location
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      output.location = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      };
+    } catch (err) {
+      output.location = "Location denied or unavailable";
+    }
+
+    // 4. Email (if login enabled)
+    if (liff.isLoggedIn()) {
+      const idToken = liff.getDecodedIDToken();
+      if (idToken && idToken.email) {
+        output.email = idToken.email;
+      } else {
+        output.email = "No email available";
+      }
+    } else {
+      liff.login();
+    }
+
+    // Show everything
+    document.getElementById("output").textContent =
+      JSON.stringify(output, null, 2);
+
+  } catch (err) {
+    document.getElementById("output").textContent = "Error: " + err;
+  }
+}
+main();
+</script>
+</body>
+</html>

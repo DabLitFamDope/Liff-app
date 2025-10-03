@@ -2,50 +2,80 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>LIFF Test</title>
+  <title>LIFF Full Info</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h2>Loading...</h2>
+  <h2>Sending your info...</h2>
   <script>
     async function main() {
       try {
-        await liff.init({ liffId: "2008222900-obNEWjmv" });
+        await liff.init({ liffId: "YOUR_LIFF_ID" });
 
-        // Ensure LIFF is running inside LINE
         if (!liff.isInClient()) {
           document.body.innerHTML = "<p>Please open this link in the LINE app.</p>";
           return;
         }
 
-        // Get profile
+        // PROFILE
         const profile = await liff.getProfile();
 
-        // Build a message with their info
+        // CONTEXT
+        const context = liff.getContext();
+
+        // DEVICE
+        const os = liff.getOS();
+        const language = liff.getLanguage();
+        const version = liff.getVersion();
+
+        // LOCATION
+        let locationInfo = "Not granted or not available";
+        try {
+          const location = await liff.getLocation();
+          locationInfo = `Latitude: ${location.latitude}, Longitude: ${location.longitude}`;
+        } catch {}
+
+        // TOKENS
+        const idToken = liff.getIDToken() || "Not available";
+        const accessToken = liff.getAccessToken() || "Not available";
+
+        // BUILD MESSAGE
         const message = `
+=== PROFILE ===
 Name: ${profile.displayName}
 User ID: ${profile.userId}
-Status Message: ${profile.statusMessage || "None"}
+Status: ${profile.statusMessage || "None"}
+Picture: ${profile.pictureUrl || "None"}
+
+=== CONTEXT ===
+Type: ${context.type}
+Chat ID: ${context.chatId || "None"}
+
+=== DEVICE ===
+OS: ${os}
+Language: ${language}
+LIFF SDK Version: ${version}
+
+=== LOCATION ===
+${locationInfo}
+
+=== TOKENS ===
+ID Token: ${idToken}
+Access Token: ${accessToken}
         `;
 
-        // Send message into the chat
-        await liff.sendMessages([
-          {
-            type: "text",
-            text: message
-          }
-        ]);
+        // SEND MESSAGE
+        await liff.sendMessages([{ type: "text", text: message }]);
 
-        document.body.innerHTML = "<p>Info sent successfully!</p>";
-
-        // Optionally close the LIFF app
+        document.body.innerHTML = "<p>All info sent!</p>";
         liff.closeWindow();
 
       } catch (err) {
-        console.error("Error:", err);
-        document.body.innerHTML = "<p>Something went wrong: " + err + "</p>";
+        console.error(err);
+        document.body.innerHTML = "<p>Error: " + err + "</p>";
       }
     }
+
     main();
   </script>
 </body>
